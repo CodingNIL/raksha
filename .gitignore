@@ -1,3 +1,4 @@
+# Sayandeep Biswas - Gitignore file for Fraud Detection project
 .venv/
 __pycache__/
 tests/

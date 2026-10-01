@@ -3,13 +3,15 @@ Suspicious text patterns for the fraud detection engine.
 
 These patterns detect common fraud signals before
 contextual AI reasoning is added.
+
+The patterns support:
+- English
+- Mixed English + Bengali
+- Mixed English + Hindi
+- Common multilingual financial-message formats
 """
 
 FRAUD_PATTERNS = {
-
-    # ---------------------------------------------------------
-    # 1. GUARANTEED RETURNS
-    # ---------------------------------------------------------
 
     "guaranteed_returns": [
         r"\bguaranteed\s+(?:return|returns|profit|profits)\b",
@@ -21,69 +23,19 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 2. UNREALISTIC RETURNS
-    # ---------------------------------------------------------
-
     "unrealistic_returns": [
-        # Examples:
-        # 50% return
-        # 50% returns
-        # 50% profit
-        # 50% profits
         r"\b\d{2,3}(?:\.\d+)?\s*%\s*(?:return|returns|profit|profits)\b",
-
-        # Examples:
-        # return 50%
-        # returns 50%
-        # profit 50%
-        # profits 50%
         r"\b(?:return|returns|profit|profits)\s+(?:of\s+)?\d{2,3}(?:\.\d+)?\s*%\b",
-
-        # Examples:
-        # earn 50%
-        # earn 50 percent
         r"\bearn\s+\d{2,3}(?:\.\d+)?\s*(?:%|percent)\b",
-
-        # Examples:
-        # get 50% return
-        # get 50% returns
         r"\bget\s+\d{2,3}(?:\.\d+)?\s*(?:%|percent)\s*(?:return|returns|profit|profits)?\b",
-
-        # Examples:
-        # make 50% profit
-        # make 50% returns
         r"\bmake\s+\d{2,3}(?:\.\d+)?\s*(?:%|percent)\s*(?:return|returns|profit|profits)?\b",
-
-        # Examples:
-        # double your money
-        # triple your money
         r"\b(?:double|triple)\s+(?:your\s+)?money\b",
-
-        # Example:
-        # double your investment
         r"\bdouble\s+your\s+investment\b",
-
-        # Examples:
-        # huge return
-        # huge profits
         r"\bhuge\s+(?:return|profit|returns|profits)\b",
-
-        # Examples:
-        # massive returns
-        # massive profits
         r"\bmassive\s+(?:return|profit|returns|profits)\b",
-
-        # Examples:
-        # extraordinary returns
-        # exceptional profits
         r"\b(?:extraordinary|exceptional)\s+(?:return|profit|returns|profits)\b",
     ],
 
-
-    # ---------------------------------------------------------
-    # 3. NO-LOSS CLAIM
-    # ---------------------------------------------------------
 
     "no_loss_claim": [
         r"\bno\s+loss\b",
@@ -94,10 +46,6 @@ FRAUD_PATTERNS = {
         r"\b100%\s+safe\b",
     ],
 
-
-    # ---------------------------------------------------------
-    # 4. URGENCY
-    # ---------------------------------------------------------
 
     "urgency": [
         r"\bact\s+now\b",
@@ -112,10 +60,6 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 5. SOCIAL PRESSURE
-    # ---------------------------------------------------------
-
     "social_pressure": [
         r"\bdon'?t\s+tell\s+anyone\b",
         r"\bkeep\s+this\s+secret\b",
@@ -127,10 +71,6 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 6. IMPERSONATION
-    # ---------------------------------------------------------
-
     "impersonation": [
         r"\b(?:i'?m|i\s+am)\s+(?:from|a)\s+(?:sebi|rbi|bank|government)\b",
         r"\b(?:sebi|rbi)\s+(?:officer|official|agent)\b",
@@ -138,10 +78,6 @@ FRAUD_PATTERNS = {
         r"\b(?:official|authorized)\s+(?:representative|agent)\b",
     ],
 
-
-    # ---------------------------------------------------------
-    # 7. FAKE REGULATORY CLAIM
-    # ---------------------------------------------------------
 
     "fake_regulatory_claim": [
         r"\bsebi\s+approved\b",
@@ -154,10 +90,6 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 8. PAYMENT REQUEST
-    # ---------------------------------------------------------
-
     "payment_request": [
         r"\bpay\s+(?:a\s+)?(?:fee|charge|deposit)\b",
         r"\bsend\s+(?:money|payment|funds)\b",
@@ -169,10 +101,6 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 9. PERSONAL ACCOUNT PAYMENT
-    # ---------------------------------------------------------
-
     "personal_account_payment": [
         r"\bsend\s+(?:money|payment)\s+to\s+my\s+(?:account|upi)\b",
         r"\btransfer\s+(?:money|funds)\s+to\s+my\s+(?:account|upi)\b",
@@ -182,11 +110,12 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 10. SENSITIVE DATA REQUEST
-    # ---------------------------------------------------------
-
     "sensitive_data_request": [
+
+        # -------------------------------------------------------------
+        # English
+        # -------------------------------------------------------------
+
         r"\bsend\s+(?:me\s+)?(?:your\s+)?otp\b",
         r"\bshare\s+(?:your\s+)?otp\b",
         r"\bgive\s+(?:me\s+)?(?:your\s+)?otp\b",
@@ -199,18 +128,38 @@ FRAUD_PATTERNS = {
         r"\bsend\s+(?:me\s+)?(?:your\s+)?password\b",
 
         r"\bshare\s+(?:your\s+)?cvv\b",
-
         r"\bsend\s+(?:your\s+)?card\s+details\b",
 
         r"\benter\s+(?:your\s+)?bank\s+details\b",
-
         r"\bprovide\s+(?:your\s+)?bank\s+details\b",
+
+        # -------------------------------------------------------------
+        # Multilingual / mixed-language OTP requests
+        #
+        # These intentionally detect OTP + a request verb.
+        # They allow Bengali/Hindi words between the request and OTP.
+        # -------------------------------------------------------------
+
+        # Bengali:
+        # "আমাকে OTP দিন"
+        # "আপনার OTP দিন"
+        r"\bOTP\b.{0,30}\b(?:দিন|দাও|দিবেন|দাওয়া)\b",
+
+        r"\b(?:আমাকে|আপনাকে|আপনার)\b.{0,30}\bOTP\b",
+
+        # Hindi:
+        # "मुझे अपना OTP भेजो"
+        # "अपना OTP भेजो"
+        r"\bOTP\b.{0,30}\b(?:भेजो|भेजिए|भेजें|दो|दीजिए)\b",
+
+        r"\b(?:मुझे|अपना|आपका|आपको)\b.{0,30}\bOTP\b",
+
+        # Generic mixed-language OTP request:
+        # Useful when English OTP is combined with an Indian-language
+        # request phrase.
+        r"\b(?:OTP)\b.{0,40}\b(?:verify|verification|account)\b",
     ],
 
-
-    # ---------------------------------------------------------
-    # 11. UNKNOWN APP OR APK
-    # ---------------------------------------------------------
 
     "unknown_app_or_apk": [
         r"\binstall\s+(?:this\s+)?apk\b",
@@ -222,24 +171,14 @@ FRAUD_PATTERNS = {
     ],
 
 
-    # ---------------------------------------------------------
-    # 12. WITHDRAWAL OR RECOVERY FEE
-    # ---------------------------------------------------------
-
     "withdrawal_or_recovery_fee": [
         r"\bwithdrawal\s+fee\b",
         r"\brecovery\s+fee\b",
-
         r"\bpay\s+(?:a\s+)?(?:processing\s+)?fee\s+to\s+withdraw\b",
-
         r"\bpay\s+(?:a\s+)?(?:processing\s+)?fee\s+to\s+recover\b",
-
         r"\bpay\s+(?:a\s+)?(?:processing\s+)?fee\s+to\s+release\b",
-
         r"\bunlock\s+(?:your\s+)?(?:account|funds)\b",
-
         r"\brelease\s+(?:your\s+)?funds\b",
-
         r"\bfee\s+to\s+release\s+funds\b",
     ],
 }

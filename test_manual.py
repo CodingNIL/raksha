@@ -4,62 +4,69 @@ from backend.services.fraud_engine.engine import analyze_text
 
 
 TEST_MESSAGES = [
-    # ---------------------------------------------------------
-    # TEST 1: Guaranteed returns
-    # ---------------------------------------------------------
+    # English
     "Invest ₹5000 and get guaranteed 50% returns. Act now!",
 
-    # ---------------------------------------------------------
-    # TEST 2: Sensitive information
-    # ---------------------------------------------------------
+    # English sensitive-data request
     "Send me your OTP to verify your investment account.",
 
-    # ---------------------------------------------------------
-    # TEST 3: Payment + withdrawal fee
-    # ---------------------------------------------------------
+    # English withdrawal scam
     "Pay a processing fee to withdraw your investment.",
 
-    # ---------------------------------------------------------
-    # TEST 4: Unknown APK
-    # ---------------------------------------------------------
+    # English APK scam
     "Download this APK and install it to activate your investment account.",
 
-    # ---------------------------------------------------------
-    # TEST 5: Impersonation
-    # ---------------------------------------------------------
+    # English impersonation
     "I am a SEBI officer. Send your details immediately.",
 
-    # ---------------------------------------------------------
-    # TEST 6: Social pressure
-    # ---------------------------------------------------------
+    # English social pressure
     "Don't tell anyone about this secret investment. Trust me.",
 
-    # ---------------------------------------------------------
-    # TEST 7: More legitimate financial text
-    # ---------------------------------------------------------
-    "Never share your OTP or password with anyone. "
-    "Always verify financial information through official sources.",
+    # Legitimate English warning
+    "Never share your OTP or password with anyone. Always verify financial information through official sources.",
 
-    # ---------------------------------------------------------
-    # TEST 8: Simple harmless message
-    # ---------------------------------------------------------
+    # Legitimate financial education
     "I want to learn how mutual funds work before investing.",
+
+    # Bengali + English
+    "আমাকে OTP দিন আপনার investment account verify করার জন্য।",
+
+    # Hindi + English
+    "मुझे अपना OTP भेजो investment account verify करने के लिए।",
+
+    # Banglish
+    "Ami amar taka invest korte chai kintu ora guaranteed profit debe.",
+
+    # Hinglish
+    "Main apna paisa invest karna chahta hoon lekin ye log guaranteed return bol rahe hain.",
 ]
 
 
 def print_result(number: int, text: str, result: dict) -> None:
-    """
-    Print one fraud-analysis result in a readable format.
-    """
 
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 80)
     print(f"TEST {number}")
-    print("=" * 70)
+    print("=" * 80)
 
     print("\nINPUT:")
     print(text)
 
-    print("\nSIGNALS:")
+    print("\nLANGUAGE:")
+
+    language = result["language"]
+
+    print(f"  Detected : {language['language']}")
+
+    print(f"  Character counts:")
+    print(f"    Bengali      : {language['character_counts']['bengali']}")
+    print(f"    Devanagari   : {language['character_counts']['devanagari']}")
+    print(f"    Latin        : {language['character_counts']['latin']}")
+
+    print("  Transliteration counts:")
+    print(f"    Bengali      : {language['transliterated_counts']['bengali']}")
+    print(f"    Hindi        : {language['transliterated_counts']['hindi']}")
+
+    print("\nFRAUD SIGNALS:")
 
     signals = result["fraud_analysis"]["signals"]
 
@@ -74,10 +81,14 @@ def print_result(number: int, text: str, result: dict) -> None:
     evidence = result["fraud_analysis"]["evidence"]
 
     if evidence:
+
         for signal, matches in evidence.items():
+
             print(f"  {signal}:")
+
             for match in matches:
                 print(f"    - {match}")
+
     else:
         print("  - No evidence found")
 
@@ -95,30 +106,33 @@ def print_result(number: int, text: str, result: dict) -> None:
 
 
 def main():
-    """
-    Run all manual fraud-engine tests.
-    """
 
     print("\n")
-    print("=" * 70)
+    print("=" * 80)
     print("SANGYAN FRAUD DETECTION ENGINE")
-    print("STEP 1.9 - MANUAL TEST")
-    print("=" * 70)
+    print("MULTILINGUAL MANUAL TEST")
+    print("=" * 80)
 
     for number, text in enumerate(TEST_MESSAGES, start=1):
 
         result = analyze_text(text)
 
         if result["success"]:
-            print_result(number, text, result)
+
+            print_result(
+                number,
+                text,
+                result
+            )
 
         else:
+
             print("\nERROR:")
             print(result["message"])
 
-    print("\n" + "=" * 70)
-    print("MANUAL TEST COMPLETE")
-    print("=" * 70)
+    print("\n" + "=" * 80)
+    print("MULTILINGUAL MANUAL TEST COMPLETE")
+    print("=" * 80)
 
 
 if __name__ == "__main__":

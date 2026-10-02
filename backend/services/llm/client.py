@@ -1,60 +1,54 @@
 """
-Gemini client for fraud-analysis reasoning.
+Groq client for fraud-analysis reasoning.
 
 This module:
-- Creates the Gemini client securely from GEMINI_API_KEY.
-- Uses Gemini Interactions API.
-- Requests structured JSON output.
+- Creates the Groq client securely from GROQ_API_KEY.
+- Uses Groq's Chat Completions API.
+- Uses strict JSON Schema structured output.
 - Retries temporary service errors.
 - Validates the returned structure.
+- Keeps analyze_with_gemini() as a compatibility wrapper
+  so the existing reasoning layer does not need to change.
 """
 
 import json
 import os
 import time
 
-from google import genai
+from groq import Groq
 
 
-GEMINI_MODEL = "gemini-3.8-flash"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 3
 
-# Detailed fraud-analysis prompts may take longer than
-# the SDK default HTTP timeout.
-GEMINI_TIMEOUT_MS = 120000
 
-
-def get_gemini_client() -> genai.Client:
+def get_groq_client() -> Groq:
     """
-    Create and return a Gemini client.
+    Create and return a Groq client.
 
-    The API key must be supplied through GEMINI_API_KEY.
+    The API key must be supplied through GROQ_API_KEY.
     """
 
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key:
         raise RuntimeError(
-            "GEMINI_API_KEY environment variable is not set."
+            "GROQ_API_KEY environment variable is not set."
         )
 
-    return genai.Client(
-        api_key=api_key,
-        http_options={
-            "timeout": GEMINI_TIMEOUT_MS
-        },
-    )
+    return Groq(api_key=api_key)
 
 
 def build_response_schema() -> dict:
     """
-    Return the structured JSON schema expected from Gemini.
+    Return the structured JSON schema expected from the LLM.
     """
 
     return {
         "type": "object",
+        "additionalProperties": False,
         "properties": {
             "additional_signals": {
                 "type": "array",
@@ -82,6 +76,7 @@ def build_response_schema() -> dict:
             },
             "context": {
                 "type": "object",
+                "additionalProperties": False,
                 "properties": {
                     "financial_pressure": {
                         "type": "boolean"
@@ -124,17 +119,15 @@ def build_response_schema() -> dict:
 
 def validate_response(data: dict) -> dict:
     """
-    Validate the basic structure returned by Gemini.
+    Validate the basic structure returned by the LLM.
 
-    Validation errors are raised as RuntimeError because
-    the existing LLM tests and service contract expect
-    malformed model responses to be treated as runtime
-    service failures.
+    Validation errors are raised as RuntimeError so that
+    the existing LLM service contract remains unchanged.
     """
 
     if not isinstance(data, dict):
         raise RuntimeError(
-            "Gemini response must be a JSON object."
+            "Groq response must be a JSON object."
         )
 
     required_fields = [
@@ -149,7 +142,7 @@ def validate_response(data: dict) -> dict:
     for field in required_fields:
         if field not in data:
             raise RuntimeError(
-                f"Gemini response missing required field: {field}"
+                f"Groq response missing required field: {field}"
             )
 
     list_fields = [
@@ -162,12 +155,18 @@ def validate_response(data: dict) -> dict:
     for field in list_fields:
         if not isinstance(data[field], list):
             raise RuntimeError(
-                f"Gemini field '{field}' must be a list."
+                f"Groq field '{field}' must be a list."
             )
+
+        for item in data[field]:
+            if not isinstance(item, str):
+                raise RuntimeError(
+                    f"Groq field '{field}' must contain only strings."
+                )
 
     if not isinstance(data["context"], dict):
         raise RuntimeError(
-            "Gemini field 'context' must be an object."
+            "Groq field 'context' must be an object."
         )
 
     context_fields = [
@@ -181,7 +180,7 @@ def validate_response(data: dict) -> dict:
     for field in context_fields:
         if field not in data["context"]:
             raise RuntimeError(
-                f"Gemini context missing field: {field}"
+                f"Groq context missing field: {field}"
             )
 
         if not isinstance(
@@ -189,7 +188,7 @@ def validate_response(data: dict) -> dict:
             bool,
         ):
             raise RuntimeError(
-                f"Gemini context field '{field}' must be boolean."
+                f"Groq context field '{field}' must be boolean."
             )
 
     if not isinstance(
@@ -197,25 +196,28 @@ def validate_response(data: dict) -> dict:
         str,
     ):
         raise RuntimeError(
-            "Gemini field 'explanation' must be a string."
+            "Groq field 'explanation' must be a string."
         )
 
     return data
 
 
-def analyze_with_gemini(prompt: str) -> dict:
+def analyze_with_groq(prompt: str) -> dict:
     """
-    Send a fraud-analysis prompt to Gemini.
+    Send a fraud-analysis prompt to Groq.
+
+    The model is instructed to return a response matching
+    the strict JSON schema.
 
     Temporary API failures are retried.
     """
 
     if not prompt or not prompt.strip():
         raise ValueError(
-            "Gemini prompt cannot be empty."
+            "Groq prompt cannot be empty."
         )
 
-    client = get_gemini_client()
+    client = get_groq_client()
 
     response_schema = build_response_schema()
 
@@ -223,21 +225,36 @@ def analyze_with_gemini(prompt: str) -> dict:
 
     for attempt in range(MAX_RETRIES):
         try:
-            interaction = client.interactions.create(
-                model=GEMINI_MODEL,
-                input=prompt,
+            response = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
                 response_format={
-                    "type": "text",
-                    "mime_type": "application/json",
-                    "schema": response_schema,
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "fraud_analysis",
+                        "strict": True,
+                        "schema": response_schema,
+                    },
                 },
             )
 
-            response_text = interaction.output_text
+            if not response.choices:
+                raise RuntimeError(
+                    "Groq returned no choices."
+                )
+
+            message = response.choices[0].message
+
+            response_text = message.content
 
             if not response_text:
                 raise RuntimeError(
-                    "Gemini returned an empty response."
+                    "Groq returned an empty response."
                 )
 
             try:
@@ -246,7 +263,7 @@ def analyze_with_gemini(prompt: str) -> dict:
                 )
             except json.JSONDecodeError as exc:
                 raise RuntimeError(
-                    "Gemini returned invalid JSON."
+                    "Groq returned invalid JSON."
                 ) from exc
 
             return validate_response(
@@ -259,11 +276,13 @@ def analyze_with_gemini(prompt: str) -> dict:
             error_text = str(exc).lower()
 
             temporary_error = (
-                "503" in error_text
+                "429" in error_text
+                or "rate limit" in error_text
+                or "503" in error_text
                 or "service unavailable" in error_text
                 or "temporarily unavailable" in error_text
-                or "high demand" in error_text
-                or "429" in error_text
+                or "timeout" in error_text
+                or "timed out" in error_text
             )
 
             if (
@@ -276,9 +295,22 @@ def analyze_with_gemini(prompt: str) -> dict:
                 continue
 
             raise RuntimeError(
-                f"Gemini API request failed: {last_error}"
+                f"Groq API request failed: {last_error}"
             ) from last_error
 
     raise RuntimeError(
-        f"Gemini API request failed: {last_error}"
+        f"Groq API request failed: {last_error}"
     )
+
+
+def analyze_with_gemini(prompt: str) -> dict:
+    """
+    Backward-compatible wrapper.
+
+    reasoning.py currently imports analyze_with_gemini().
+    Keeping this function avoids unnecessary changes
+    elsewhere in the project while the actual provider
+    is now Groq.
+    """
+
+    return analyze_with_groq(prompt)

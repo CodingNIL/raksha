@@ -29,7 +29,6 @@ def count_script_characters(text: str) -> dict:
 
     Therefore, punctuation such as the Bengali/Hindi danda:
         ।
-
     must NOT be counted as Devanagari language evidence.
     """
 
@@ -40,7 +39,6 @@ def count_script_characters(text: str) -> dict:
     }
 
     for char in text:
-
         code_point = ord(char)
 
         # Ignore punctuation, numbers, symbols, spaces, etc.
@@ -229,6 +227,17 @@ HINGLISH_WORDS = {
 
     "paisa",
     "paise",
+    "rupaye",
+    "rupay",
+    "rupees",
+
+    "abhi",
+    "aaj",
+    "jaldi",
+    "turant",
+    "turant",
+    "fauran",
+    "foran",
 
     "chahta",
     "chahti",
@@ -332,7 +341,7 @@ def tokenize_latin_text(text: str) -> list[str]:
 
     return re.findall(
         r"[a-zA-Z]+",
-        text.lower()
+        text.lower(),
     )
 
 
@@ -411,7 +420,7 @@ def detect_language(text: str) -> str:
 
     text = unicodedata.normalize(
         "NFKC",
-        text
+        text,
     ).strip()
 
     if not text:

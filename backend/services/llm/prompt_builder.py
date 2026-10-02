@@ -120,28 +120,45 @@ EXPLANATION LANGUAGE REQUIREMENT:
 
 The "explanation" field is user-facing.
 
-Write the explanation in the same language or language style
-used by the user in the message.
+The explanation must preserve the existing fraud-warning
+and evidence-based behavior. Multilingual support is an
+additional accessibility feature and must NOT replace,
+remove, weaken, or shorten the important safety warning.
 
 Follow these rules:
 
-- If the message is in English, write the explanation in English.
-- If the message is in Bengali script, write the explanation in Bengali.
-- If the message is in Hindi/Devanagari script, write the explanation in Hindi.
-- If the message is Banglish (Bengali written using Latin characters),
-  write the explanation in natural Banglish.
-- If the message is Hinglish (Hindi written using Latin characters),
-  write the explanation in natural Hinglish.
-- If the message is mixed-language, use the dominant language/style
-  of the user's message and preserve meaningful code-switching where
-  appropriate.
-- Do not translate the user's message into English just to produce
-  the explanation.
+- If the message is in English, write ONE clear explanation in English.
+- If the message is not in English, write the explanation in TWO parts:
+  1. First, provide a clear English explanation.
+  2. Immediately after that, provide the same explanation in the
+     user's detected language or language style.
+- For Bengali script, provide English first and then Bengali.
+- For Hindi/Devanagari script, provide English first and then Hindi.
+- For Banglish (Bengali written using Latin characters), provide
+  English first and then natural Banglish.
+- For Hinglish (Hindi written using Latin characters), provide
+  English first and then natural Hinglish.
+- For mixed-language messages, provide English first and then
+  explain the message using the dominant detected language/style,
+  preserving meaningful code-switching where appropriate.
+- Separate the English and user-language explanations clearly.
+- Use labels such as "English:" and the appropriate language label
+  such as "Bengali:", "Hindi:", "Banglish:", or "Hinglish:".
+- The English explanation must always appear first for non-English
+  messages.
+- Do not translate the user's message merely for analysis.
+- The second explanation should communicate the same safety meaning
+  as the English explanation.
+- Do not remove warnings, evidence, risk context, or recommended
+  safety behavior when producing the second-language explanation.
+- Keep important safety guidance explicit, such as warnings against
+  sending money or sharing OTPs, PINs, passwords, or other sensitive
+  information when the message contains such risks.
 - Keep fraud category names such as "guaranteed_returns",
   "payment_request", and "impersonation" unchanged when they need
   to be referenced as technical signal names.
-- Keep the explanation concise, clear, evidence-based, and easy for
-  the original user to understand.
+- Keep both explanations concise, clear, evidence-based, and easy
+  for the original user to understand.
 - Do not add facts that are not present in the message.
 
 Return ONLY JSON using this structure:

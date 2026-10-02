@@ -42,7 +42,7 @@ FRAUD_PATTERNS = {
        r"\b(?:guaranteed|sure)\s+(?:labh|profit|return)\b",
 
        # Bengali
-       r"নিশ্চিত\s+(?:লাভ|রিটার্ন|আয়)",
+r"নিশ্চিত\s+(?:লাভ|রিটার্ন|আয়)",
        r"(?:গ্যারান্টিড|নিশ্চিত)\s+(?:লাভ|রিটার্ন)",
        r"(?:গ্যারান্টি|নিশ্চিত)\s+(?:লাভ|রিটার্ন)",
 
@@ -366,10 +366,13 @@ FRAUD_PATTERNS = {
        r"\benter\s+(?:your\s+)?password\b",
 
        r"\bshare\s+(?:your\s+)?cvv\b",
+        r"\bsend\s+(?:me\s+)?(?:your\s+)?cvv\b",
+        r"\bprovide\s+(?:your\s+)?cvv\b",
        r"\bsend\s+(?:your\s+)?card\s+details\b",
        r"\bshare\s+(?:your\s+)?card\s+details\b",
 
        r"\benter\s+(?:your\s+)?bank\s+details\b",
+        r"\bsend\s+(?:me\s+)?(?:your\s+)?bank\s+details\b",
        r"\bprovide\s+(?:your\s+)?bank\s+details\b",
        r"\bshare\s+(?:your\s+)?bank\s+details\b",
 

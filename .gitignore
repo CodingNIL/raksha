@@ -1,4 +1,6 @@
 # Sayandeep Biswas - Gitignore file for Fraud Detection project
+# Saumabrata Saha - Gitignore file for Fraud Detection project
+
 
 # Python cache
 __pycache__/
@@ -18,3 +20,5 @@ ENV/
 # Test files/folders
 test/
 tests/
+# Coverage
+.coverage

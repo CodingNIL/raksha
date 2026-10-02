@@ -68,9 +68,19 @@ def is_negated(text: str, match_start: int) -> bool:
     return False
 
 
-def find_pattern_matches(text: str, pattern: str) -> list[str]:
+def find_pattern_matches(
+    text: str,
+    pattern: str,
+    check_following_negation: bool = False,
+) -> list[str]:
     """
     Find regex matches while filtering out basic negated contexts.
+
+    Args:
+        text: Normalized text.
+        pattern: Regex pattern.
+        check_following_negation: Whether to check for Bengali
+            post-match negation such as "OTP ... ??".
 
     Returns:
         List of valid matched phrases.
@@ -91,6 +101,18 @@ def find_pattern_matches(text: str, pattern: str) -> list[str]:
         # Ignore matches that occur inside a warning/negated sentence.
         if is_negated(text, match.start()):
             continue
+
+        # Bengali warnings can place the negation after a
+        # sensitive-data request, e.g. "OTP ... ??".
+        # This must NOT apply to unrelated signals such as urgency.
+        if check_following_negation:
+            following_text = text[match.end():match.end() + 16]
+
+            if any(
+                following_text[index:index + 2] == "\u09a8\u09be"
+                for index in range(len(following_text) - 1)
+            ):
+                continue
 
         if match_text not in matches:
             matches.append(match_text)
@@ -133,7 +155,10 @@ def detect_rule_signals(text: str) -> dict:
 
             pattern_matches = find_pattern_matches(
                 text,
-                pattern
+                pattern,
+                check_following_negation=(
+                    signal_name == "sensitive_data_request"
+                ),
             )
 
             for match_text in pattern_matches:

@@ -338,10 +338,20 @@ def analyze_text(
         },
         "language": language_details,
         "fraud_analysis": {
-            "signals": combined_signals,
-            "evidence": combined_evidence,
-            "llm_context": llm_context,
-        },
+    "signals": combined_signals,
+    "evidence": combined_evidence,
+    "entities": (
+        llm_analysis.get("entities", [])
+        if isinstance(llm_analysis, dict)
+        else []
+    ),
+    "claims": (
+        llm_analysis.get("claims", [])
+        if isinstance(llm_analysis, dict)
+        else []
+    ),
+    "llm_context": llm_context,
+},
         "risk": {
             "score": risk_result["score"],
             "level": risk_result["level"],

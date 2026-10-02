@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+google-genai
+pytest
+pytest-cov
+pillow
+rapidocr-onnxruntime
+python-multipart

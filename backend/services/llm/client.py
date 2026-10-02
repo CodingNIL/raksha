@@ -15,6 +15,10 @@ import time
 
 from google import genai
 
+from backend.services.fraud_engine.taxonomy import (
+    get_signal_names,
+)
+
 
 GEMINI_MODEL = "gemini-3.8-flash"
 
@@ -127,8 +131,7 @@ def validate_response(data: dict) -> dict:
     Validate the basic structure returned by Gemini.
 
     Validation errors are raised as RuntimeError because
-    the existing LLM tests and service contract expect
-    malformed model responses to be treated as runtime
+    malformed model responses are treated as runtime
     service failures.
     """
 
@@ -163,6 +166,21 @@ def validate_response(data: dict) -> dict:
         if not isinstance(data[field], list):
             raise RuntimeError(
                 f"Gemini field '{field}' must be a list."
+            )
+
+    valid_signals = set(
+        get_signal_names()
+    )
+
+    for signal in data["additional_signals"]:
+        if not isinstance(signal, str):
+            raise RuntimeError(
+                "Gemini additional_signals must contain only strings."
+            )
+
+        if signal not in valid_signals:
+            raise RuntimeError(
+                f"Gemini returned unknown fraud signal: {signal}"
             )
 
     if not isinstance(data["context"], dict):

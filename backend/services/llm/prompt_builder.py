@@ -1,8 +1,8 @@
 """
 LLM prompt builder for the SANGYAN fraud detection engine.
 
-This module prepares structured information for a future
-LLM reasoning layer.
+This module prepares structured information for an LLM
+reasoning layer.
 
 The LLM will be used for:
 - contextual reasoning
@@ -28,7 +28,7 @@ def build_fraud_reasoning_prompt(
     rule_evidence: dict,
 ) -> str:
     """
-    Build the structured reasoning prompt for the future LLM layer.
+    Build the structured reasoning prompt for the LLM layer.
     """
 
     taxonomy = get_taxonomy()
@@ -115,6 +115,34 @@ ANALYSIS TASK:
    - suspicious instructions
 
 6. Do not invent facts that are not present in the message.
+
+EXPLANATION LANGUAGE REQUIREMENT:
+
+The "explanation" field is user-facing.
+
+Write the explanation in the same language or language style
+used by the user in the message.
+
+Follow these rules:
+
+- If the message is in English, write the explanation in English.
+- If the message is in Bengali script, write the explanation in Bengali.
+- If the message is in Hindi/Devanagari script, write the explanation in Hindi.
+- If the message is Banglish (Bengali written using Latin characters),
+  write the explanation in natural Banglish.
+- If the message is Hinglish (Hindi written using Latin characters),
+  write the explanation in natural Hinglish.
+- If the message is mixed-language, use the dominant language/style
+  of the user's message and preserve meaningful code-switching where
+  appropriate.
+- Do not translate the user's message into English just to produce
+  the explanation.
+- Keep fraud category names such as "guaranteed_returns",
+  "payment_request", and "impersonation" unchanged when they need
+  to be referenced as technical signal names.
+- Keep the explanation concise, clear, evidence-based, and easy for
+  the original user to understand.
+- Do not add facts that are not present in the message.
 
 Return ONLY JSON using this structure:
 

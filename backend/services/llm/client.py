@@ -10,7 +10,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 
-from backend.services.fraud_engine.taxonomy import get_signal_names
+from services.fraud_engine.taxonomy import get_signal_names
 
 
 # Load backend/.env explicitly

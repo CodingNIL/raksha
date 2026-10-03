@@ -21,11 +21,11 @@ Pipeline:
     Structured result
 """
 
-from backend.services.fraud_engine.normalizer import normalize_text
-from backend.services.fraud_engine.rules import detect_rule_signals
-from backend.services.fraud_engine.scoring import calculate_risk
-from backend.services.language.detector import get_language_details
-from backend.services.llm.reasoning import analyze_with_llm
+from services.fraud_engine.normalizer import normalize_text
+from services.fraud_engine.rules import detect_rule_signals
+from services.fraud_engine.scoring import calculate_risk
+from services.language.detector import get_language_details
+from services.llm.reasoning import analyze_with_llm
 
 
 def generate_safe_actions(

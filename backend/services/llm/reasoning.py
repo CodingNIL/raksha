@@ -12,8 +12,8 @@ It does not calculate the final fraud risk score.
 The deterministic fraud engine remains responsible for scoring.
 """
 
-from backend.services.llm.client import analyze_with_gemini
-from backend.services.llm.prompt_builder import (
+from services.llm.client import analyze_with_gemini
+from services.llm.prompt_builder import (
     build_fraud_reasoning_prompt,
 )
 

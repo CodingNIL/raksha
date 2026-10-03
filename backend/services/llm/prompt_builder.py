@@ -18,7 +18,7 @@ The LLM must NOT:
 - make financial decisions for the user
 """
 
-from backend.services.fraud_engine.taxonomy import get_taxonomy
+from services.fraud_engine.taxonomy import get_taxonomy
 
 
 def build_fraud_reasoning_prompt(

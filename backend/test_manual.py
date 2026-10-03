@@ -1,6 +1,6 @@
 from pprint import pprint
 
-from backend.services.fraud_engine.engine import analyze_text
+from services.fraud_engine.engine import analyze_text
 
 
 TEST_MESSAGES = [

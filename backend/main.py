@@ -2,22 +2,32 @@
 FastAPI application for the SANGYAN fraud detection system.
 """
 
+from dotenv import load_dotenv
+
+# Load environment variables from the local .env file before
+# importing services that depend on them.
+load_dotenv()
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.services.fraud_engine.engine import analyze_text
+from backend.services.ocr.extractor import OCRExtractionError, extract_text_from_image
 
+
+# ---------------------------------------------------------
 # API input limits
+# ---------------------------------------------------------
+
 MAX_TEXT_LENGTH = 10_000
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg",
     "image/png",
     "image/webp",
 }
-
-from backend.services.ocr.extractor import OCRExtractionError, extract_text_from_image
 
 
 # ---------------------------------------------------------
@@ -114,6 +124,7 @@ def analyze(request: AnalyzeRequest):
         text=request.text,
         use_llm=request.use_llm,
     )
+
 
 # ---------------------------------------------------------
 # Image fraud analysis endpoint

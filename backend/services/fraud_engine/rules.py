@@ -36,6 +36,22 @@ NEGATION_PATTERNS = [
 ]
 
 
+# Bengali standalone negation/warning words.
+#
+# IMPORTANT:
+# Do not simply search for the characters "না".
+# For example, "আপনার" contains "না", but it is NOT
+# a negation. We therefore require a Bengali word boundary
+# using the surrounding non-Bengali-letter context.
+BENGALI_NEGATION_PATTERNS = [
+    r"(?<![\u0980-\u09FF])না(?![\u0980-\u09FF])",
+    r"(?<![\u0980-\u09FF])করবেন\s+না(?![\u0980-\u09FF])",
+    r"(?<![\u0980-\u09FF])করবেননা(?![\u0980-\u09FF])",
+    r"(?<![\u0980-\u09FF])দেবেন\s+না(?![\u0980-\u09FF])",
+    r"(?<![\u0980-\u09FF])দেবেননা(?![\u0980-\u09FF])",
+]
+
+
 def is_negated(text: str, match_start: int) -> bool:
     """
     Check whether a detected phrase is preceded by a
@@ -61,8 +77,45 @@ def is_negated(text: str, match_start: int) -> bool:
 
     previous_text = text[context_start:match_start].lower()
 
+    # English negation/warning phrases.
     for pattern in NEGATION_PATTERNS:
         if re.search(pattern, previous_text, flags=re.IGNORECASE):
+            return True
+
+    # Bengali negation/warning phrases.
+    for pattern in BENGALI_NEGATION_PATTERNS:
+        if re.search(pattern, previous_text):
+            return True
+
+    return False
+
+
+def has_following_bengali_negation(
+    text: str,
+    match_end: int,
+    max_chars: int = 16,
+) -> bool:
+    """
+    Check whether a sensitive-data request is followed by
+    an actual standalone Bengali negation.
+
+    Example that SHOULD be treated as a warning:
+
+        "OTP দিন না"
+
+    Example that MUST NOT be treated as a negation:
+
+        "OTP দিন আপনার account verify করার জন্য"
+
+    The old implementation searched for the two characters
+    "না" anywhere in the following text. That incorrectly
+    matched words such as "আপনার".
+    """
+
+    following_text = text[match_end:match_end + max_chars]
+
+    for pattern in BENGALI_NEGATION_PATTERNS:
+        if re.search(pattern, following_text):
             return True
 
     return False
@@ -80,7 +133,7 @@ def find_pattern_matches(
         text: Normalized text.
         pattern: Regex pattern.
         check_following_negation: Whether to check for Bengali
-            post-match negation such as "OTP ... ??".
+            post-match negation.
 
     Returns:
         List of valid matched phrases.
@@ -91,7 +144,7 @@ def find_pattern_matches(
     for match in re.finditer(
         pattern,
         text,
-        flags=re.IGNORECASE
+        flags=re.IGNORECASE,
     ):
         match_text = match.group(0).strip()
 
@@ -102,15 +155,12 @@ def find_pattern_matches(
         if is_negated(text, match.start()):
             continue
 
-        # Bengali warnings can place the negation after a
-        # sensitive-data request, e.g. "OTP ... ??".
-        # This must NOT apply to unrelated signals such as urgency.
+        # For sensitive-data requests, check for a real
+        # standalone Bengali negation after the match.
         if check_following_negation:
-            following_text = text[match.end():match.end() + 16]
-
-            if any(
-                following_text[index:index + 2] == "\u09a8\u09be"
-                for index in range(len(following_text) - 1)
+            if has_following_bengali_negation(
+                text,
+                match.end(),
             ):
                 continue
 
@@ -141,7 +191,7 @@ def detect_rule_signals(text: str) -> dict:
     if not text or not text.strip():
         return {
             "signals": [],
-            "evidence": {}
+            "evidence": {},
         }
 
     detected_signals = []
@@ -172,5 +222,5 @@ def detect_rule_signals(text: str) -> dict:
 
     return {
         "signals": detected_signals,
-        "evidence": evidence
+        "evidence": evidence,
     }

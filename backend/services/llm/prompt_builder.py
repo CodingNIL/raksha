@@ -73,6 +73,29 @@ SUPPORTED FRAUD TAXONOMY:
 
 {taxonomy_text}
 
+STRICT SIGNAL OUTPUT RULE:
+
+The "additional_signals" field may contain ONLY signal names
+from the SUPPORTED FRAUD TAXONOMY listed above.
+
+Do NOT put contextual observations, reasoning concepts,
+or context field names into "additional_signals".
+
+For example, these are NOT valid additional_signals:
+- financial_pressure
+- unrealistic_promise
+- suspicious_instructions
+- sensitive_information_request
+
+Those concepts must be represented using the appropriate
+"context" boolean fields when applicable.
+
+Only add a signal to "additional_signals" when the message
+provides evidence supporting one of the official taxonomy
+categories.
+
+Never invent a new fraud category or create a new signal name.
+
 MESSAGE LANGUAGE:
 
 {language}
@@ -91,12 +114,16 @@ RULE-BASED EVIDENCE:
 
 ANALYSIS TASK:
 
-1. Identify any additional fraud signals supported by the
+1. Identify any ADDITIONAL fraud signals supported by the
    message context.
 
-2. Identify the strongest pieces of evidence.
+2. IMPORTANT:
+   "additional_signals" MUST contain ONLY official signal
+   names from the supported fraud taxonomy.
 
-3. Identify important entities such as:
+3. Identify the strongest pieces of evidence.
+
+4. Identify important entities such as:
    - organizations
    - regulators
    - banks
@@ -104,9 +131,9 @@ ANALYSIS TASK:
    - websites
    - payment identifiers
 
-4. Identify important claims made by the sender.
+5. Identify important claims made by the sender.
 
-5. Determine whether the message contains:
+6. Determine whether the message contains:
    - financial pressure
    - requests for money
    - requests for sensitive information
@@ -114,7 +141,23 @@ ANALYSIS TASK:
    - unrealistic promises
    - suspicious instructions
 
-6. Do not invent facts that are not present in the message.
+7. Represent these contextual observations in the
+   appropriate "context" fields. Do NOT put their names
+   into "additional_signals" unless that exact name is also
+   an official taxonomy signal.
+
+8. Do not invent facts that are not present in the message.
+
+CONTEXT FIELD RULES:
+
+- "financial_pressure" is a boolean context field.
+- "payment_request" is a boolean context field.
+- "sensitive_information_request" is a boolean context field.
+- "impersonation" is a boolean context field.
+- "unrealistic_promise" is a boolean context field.
+
+These context fields are NOT fraud signal names and must
+never be inserted into "additional_signals".
 
 EXPLANATION LANGUAGE REQUIREMENT:
 

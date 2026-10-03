@@ -12,8 +12,8 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.services.fraud_engine.engine import analyze_text
-from backend.services.ocr.extractor import (
+from services.fraud_engine.engine import analyze_text
+from services.ocr.extractor import (
     OCRExtractionError,
     extract_text_from_image,
 )

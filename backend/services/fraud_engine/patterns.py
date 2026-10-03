@@ -331,11 +331,18 @@ FRAUD_PATTERNS = {
         # Indian currency amounts
         r"\bsend\s+(?:rs\.?|inr|₹)\s*\d[\d,]*(?:\.\d+)?\b",
         r"\bsend\s+\d[\d,]*(?:\.\d+)?\s*(?:rs\.?|inr|₹)\b",
+
         r"\btransfer\s+(?:rs\.?|inr|₹)\s*\d[\d,]*(?:\.\d+)?\b",
         r"\btransfer\s+\d[\d,]*(?:\.\d+)?\s*(?:rs\.?|inr|₹)\b",
+
         r"\bpay\s+(?:rs\.?|inr|₹)\s*\d[\d,]*(?:\.\d+)?\b",
         r"\bpay\s+\d[\d,]*(?:\.\d+)?\s*(?:rs\.?|inr|₹)\b",
 
+        # English amount + rupees forms
+        r"\b(?:send|pay|transfer)\s+\d[\d,]*(?:\.\d+)?\s*(?:rupee|rupees)\b",
+        r"\b(?:send|pay|transfer)\s+\d[\d,]*(?:\.\d+)?\s*(?:rs\.?|inr)\b",
+
+        # General payment phrases
         r"\bmake\s+(?:a\s+)?payment\b",
         r"\bmake\s+(?:the\s+)?payment\b",
         r"\bsend\s+the\s+payment\b",

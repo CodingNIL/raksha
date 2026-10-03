@@ -8,12 +8,15 @@ from dotenv import load_dotenv
 # importing services that depend on them.
 load_dotenv()
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.services.fraud_engine.engine import analyze_text
-from backend.services.ocr.extractor import OCRExtractionError, extract_text_from_image
+from backend.services.ocr.extractor import (
+    OCRExtractionError,
+    extract_text_from_image,
+)
 
 
 # ---------------------------------------------------------
@@ -45,14 +48,6 @@ app = FastAPI(
 
 # ---------------------------------------------------------
 # CORS configuration
-# ---------------------------------------------------------
-#
-# Allows the frontend application to communicate with
-# the FastAPI backend during development.
-#
-# We currently allow common local development origins.
-# This can be restricted to the deployed frontend domain
-# before production deployment.
 # ---------------------------------------------------------
 
 app.add_middleware(
@@ -94,7 +89,7 @@ def root():
 
     return {
         "success": True,
-        "message": "SANGYAN Fraud Detection API is running."
+        "message": "SANGYAN Fraud Detection API is running.",
     }
 
 
@@ -117,7 +112,10 @@ def analyze(request: AnalyzeRequest):
     if len(request.text) > MAX_TEXT_LENGTH:
         raise HTTPException(
             status_code=413,
-            detail=f"Text exceeds maximum length of {MAX_TEXT_LENGTH} characters.",
+            detail=(
+                f"Text exceeds maximum length of "
+                f"{MAX_TEXT_LENGTH} characters."
+            ),
         )
 
     return analyze_text(
@@ -133,7 +131,7 @@ def analyze(request: AnalyzeRequest):
 @app.post("/analyze-image")
 async def analyze_image(
     image: UploadFile = File(...),
-    use_llm: bool = False,
+    use_llm: bool = Form(False),
 ):
     """
     Extract text from an uploaded image and run the existing
@@ -143,7 +141,10 @@ async def analyze_image(
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="Unsupported image type. Allowed types: JPEG, PNG, WEBP.",
+            detail=(
+                "Unsupported image type. "
+                "Allowed types: JPEG, PNG, WEBP."
+            ),
         )
 
     image_bytes = await image.read()

@@ -1,26 +1,23 @@
 """
 Groq client for fraud-analysis reasoning.
-
-This module:
-- Creates the Groq client securely from GROQ_API_KEY.
-- Uses Groq's Chat Completions API.
-- Uses strict JSON Schema structured output.
-- Validates returned fraud signals against the project taxonomy.
-- Retries temporary service errors.
-- Validates the returned response structure.
-- Keeps analyze_with_gemini() as a compatibility wrapper
-  so the existing reasoning layer does not need to change.
 """
 
 import json
 import os
 import time
+from pathlib import Path
 
+from dotenv import load_dotenv
 from groq import Groq
 
-from backend.services.fraud_engine.taxonomy import (
-    get_signal_names,
-)
+from backend.services.fraud_engine.taxonomy import get_signal_names
+
+
+# Load backend/.env explicitly
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+ENV_FILE = BACKEND_DIR / ".env"
+
+load_dotenv(ENV_FILE)
 
 
 GROQ_MODEL = "openai/gpt-oss-120b"
@@ -30,11 +27,7 @@ RETRY_DELAY_SECONDS = 3
 
 
 def get_groq_client() -> Groq:
-    """
-    Create and return a Groq client.
-
-    The API key must be supplied through GROQ_API_KEY.
-    """
+    """Create and return a Groq client."""
 
     api_key = os.environ.get("GROQ_API_KEY")
 
@@ -47,9 +40,7 @@ def get_groq_client() -> Groq:
 
 
 def build_response_schema() -> dict:
-    """
-    Return the strict JSON schema expected from the LLM.
-    """
+    """Return the strict JSON schema expected from the LLM."""
 
     return {
         "type": "object",
@@ -123,13 +114,7 @@ def build_response_schema() -> dict:
 
 
 def validate_response(data: dict) -> dict:
-    """
-    Validate the basic structure returned by the LLM.
-
-    Validation errors are raised as RuntimeError so that
-    malformed model responses are treated as runtime
-    service failures.
-    """
+    """Validate the structure returned by the LLM."""
 
     if not isinstance(data, dict):
         raise RuntimeError(
@@ -170,9 +155,7 @@ def validate_response(data: dict) -> dict:
                     f"Groq field '{field}' must contain only strings."
                 )
 
-    valid_signals = set(
-        get_signal_names()
-    )
+    valid_signals = set(get_signal_names())
 
     for signal in data["additional_signals"]:
         if signal not in valid_signals:
@@ -199,18 +182,12 @@ def validate_response(data: dict) -> dict:
                 f"Groq context missing field: {field}"
             )
 
-        if not isinstance(
-            data["context"][field],
-            bool,
-        ):
+        if not isinstance(data["context"][field], bool):
             raise RuntimeError(
                 f"Groq context field '{field}' must be boolean."
             )
 
-    if not isinstance(
-        data["explanation"],
-        str,
-    ):
+    if not isinstance(data["explanation"], str):
         raise RuntimeError(
             "Groq field 'explanation' must be a string."
         )
@@ -219,14 +196,7 @@ def validate_response(data: dict) -> dict:
 
 
 def analyze_with_groq(prompt: str) -> dict:
-    """
-    Send a fraud-analysis prompt to Groq.
-
-    The model is instructed to return a response matching
-    the strict JSON schema.
-
-    Temporary API failures are retried.
-    """
+    """Send a fraud-analysis prompt to Groq."""
 
     if not prompt or not prompt.strip():
         raise ValueError(
@@ -322,10 +292,8 @@ def analyze_with_gemini(prompt: str) -> dict:
     """
     Backward-compatible wrapper.
 
-    reasoning.py currently imports analyze_with_gemini().
-    Keeping this function avoids unnecessary changes
-    elsewhere in the project while the actual provider
-    is now Groq.
+    The existing reasoning layer still imports this name,
+    but the actual provider is Groq.
     """
 
     return analyze_with_groq(prompt)
